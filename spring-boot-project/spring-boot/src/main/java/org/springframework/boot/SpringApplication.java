@@ -93,6 +93,7 @@ import org.springframework.web.context.support.StandardServletEnvironment;
  * <li>Register a {@link CommandLinePropertySource} to expose command line arguments as
  * Spring properties</li>
  * <li>Refresh the application context, loading all singleton beans</li>
+ *
  * <li>Trigger any {@link CommandLineRunner} beans</li>
  * </ul>
  *
@@ -272,14 +273,21 @@ public class SpringApplication {
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
+		
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
 		//判断是否有web程序
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+		//获取application context initializer 也是在这里首次加载 spring.factories 文件
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+		//获取监听器，这里是第二次加载spring.factories 文件
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
-
+	
+	/**
+	 * 根据方法栈找到main方法 牛逼
+	 * @return
+	 */
 	private Class<?> deduceMainApplicationClass() {
 		try {
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
@@ -302,30 +310,54 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		//1.创建并启动计时监控类 初始化一个空白字符串的计时类
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
+		
+		//2.初始化应用上下文和异常报告集合
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
+		
+		//3.是指系统属性`java.awt.headless`的值，默认值为：true
 		configureHeadlessProperty();
+
+		//4.创建所有Spring运行监听器并发布应用启动事件
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+
+		//4.1 启动各个spring application run listener 监听器实例（EventPublishRunListener)
 		listeners.starting();
+
 		try {
+			
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+			
 			configureIgnoreBeanInfo(environment);
+		
 			Banner printedBanner = printBanner(environment);
+		
 			context = createApplicationContext();
+		
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
 					new Class[] { ConfigurableApplicationContext.class }, context);
+		
 			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+		
 			refreshContext(context);
+		
 			afterRefresh(context, applicationArguments);
+		
 			stopWatch.stop();
+		
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
 			}
+		
 			listeners.started(context);
+		
 			callRunners(context, applicationArguments);
+		
 		}
 		catch (Throwable ex) {
 			handleRunFailure(context, ex, exceptionReporters, listeners);
