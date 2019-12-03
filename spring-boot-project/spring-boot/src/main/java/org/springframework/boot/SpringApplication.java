@@ -457,6 +457,7 @@ public class SpringApplication {
 	 * @return
 	 */
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type) {
+		//委托给了多态方法
 		return getSpringFactoriesInstances(type, new Class<?>[] {});
 	}
 
@@ -481,7 +482,7 @@ public class SpringApplication {
 	 * @param classLoader 类加载器
 	 * @param args 程序入口传入的参数
 	 * @param names 获得的factory名字
-	 * @return
+	 * @return 返回实例的集合
 	 */
 	@SuppressWarnings("unchecked")
 	private <T> List<T> createSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes,
