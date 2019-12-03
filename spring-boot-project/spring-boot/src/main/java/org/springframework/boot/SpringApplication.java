@@ -473,7 +473,16 @@ public class SpringApplication {
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
 	}
-
+	
+	/**
+	 * 创建 SpringFactoriesInstances 方法 注意这里的命名是create
+	 * @param type 通过type读取哪一种类型的配置,因为是从spring.factory中读取配置 用来判断实例是否是期待的类
+	 * @param parameterTypes 这里是构造函数的初始形参
+	 * @param classLoader 类加载器
+	 * @param args 程序入口传入的参数
+	 * @param names 获得的factory名字
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	private <T> List<T> createSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes,
 			ClassLoader classLoader, Object[] args, Set<String> names) {
@@ -482,10 +491,13 @@ public class SpringApplication {
 			try {
 				//forName 是类加载器,可以根据完整的类名把类加载到内存中
 				//(其中有两种方式,一种是forName 直接调用构造器初始化,一种是loadClass,使用的时候才加载构造器)
+				//获得需要生成实例具体的类
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
+				//通过反射构造函数入口的构造方法
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);
 				T instance = (T) BeanUtils.instantiateClass(constructor, args);
+				//添加到list中
 				instances.add(instance);
 			}
 			catch (Throwable ex) {
