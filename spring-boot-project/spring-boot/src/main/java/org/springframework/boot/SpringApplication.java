@@ -244,44 +244,31 @@ public class SpringApplication {
 	private boolean isCustomEnvironment = false;
 
 	/**
-	 * Create a new {@link SpringApplication} instance. The application context will load
-	 * beans from the specified primary sources (see {@link SpringApplication class-level}
-	 * documentation for details. The instance can be customized before calling
 	 * 创建一个新的spring程序实例
-	 * {@link #run(String...)}.
-	 * @param primarySources the primary bean sources
-	 * @see #run(Class, String[])
-	 * @see #SpringApplication(ResourceLoader, Class...)
-	 * @see #setSources(Set)
 	 */
 	public SpringApplication(Class<?>... primarySources) {
 		this(null, primarySources);
 	}
 
 	/**
-	 * Create a new {@link SpringApplication} instance. The application context will load
-	 * beans from the specified primary sources (see {@link SpringApplication class-level}
-	 * documentation for details. The instance can be customized before calling
 	 * 构造器 创建spring 实例 创建上下文
-	 * {@link #run(String...)}.
-	 * @param resourceLoader the resource loader to use
-	 * @param primarySources the primary bean sources
-	 * @see #run(Class, String[])
-	 * @see #setSources(Set)
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+		//1. 设置资源加载器,但是第一次是传了null
 		this.resourceLoader = resourceLoader;
+		//2. 断言程序入口类不能为null
 		Assert.notNull(primarySources, "PrimarySources must not be null");
-		
+		//3.为SpringApplication设置primarySource成员变量,相当于缓存程序入口
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
-		//判断是否有web程序
+		//4.判断是否有web程序. 其中有三个环境,无web环境,web环境,流web环境
 		this.webApplicationType = WebApplicationType.deduceFromClasspath();
-		//获取application context initializer 也是在这里首次加载 spring.factories 文件
+		//5.获取application context initializer 也是在这里首次加载 spring.factories 文件
+		//5和6,都是使用getSpringFactoriesInstance方法,其中就是读取spring boot预先设置/META-INF/spring.factory文件里面读取
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
-		//获取监听器，这里是第二次加载spring.factories 文件
+		//6.获取监听器，这里是第二次加载spring.factories文件
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
-		//找到main方法的类
+		//7.找到main方法的类
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
 	
@@ -480,7 +467,7 @@ public class SpringApplication {
 		//其中loadFactory 是从META-INF/spring.factories中去拿我们自定义的工厂初始化器
 		//spring boot 为我们写了很多spring.factories 其中包括错误报告 还有系统初始化器
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
-		//这里实例化类通过name(java refrenc)来实例化
+		//这里实例化类通过name(java 路径)来实例化
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
 		//@Order 越小 越靠前
 		AnnotationAwareOrderComparator.sort(instances);
