@@ -36,7 +36,11 @@ public class DefaultApplicationArguments implements ApplicationArguments {
 	private final Source source;
 
 	private final String[] args;
-
+	
+	/**
+	 * 调用内部内Source
+	 * @param args
+	 */
 	public DefaultApplicationArguments(String[] args) {
 		Assert.notNull(args, "Args must not be null");
 		this.source = new Source(args);
@@ -47,10 +51,15 @@ public class DefaultApplicationArguments implements ApplicationArguments {
 	public String[] getSourceArgs() {
 		return this.args;
 	}
-
+	
+	/**
+	 * 获取操作的名字
+	 * @return 返回一个不可更改的Set集合
+	 */
 	@Override
 	public Set<String> getOptionNames() {
 		String[] names = this.source.getPropertyNames();
+		//返回一个不可更改的几个Set
 		return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(names)));
 	}
 
@@ -71,7 +80,12 @@ public class DefaultApplicationArguments implements ApplicationArguments {
 	}
 
 	private static class Source extends SimpleCommandLinePropertySource {
-
+		
+		
+		/**
+		 * 调用了父类{@link SimpleCommandLinePropertySource}的构造方法
+		 * @param args
+		 */
 		Source(String[] args) {
 			super(args);
 		}

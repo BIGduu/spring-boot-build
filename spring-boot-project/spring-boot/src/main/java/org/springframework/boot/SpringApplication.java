@@ -281,11 +281,13 @@ public class SpringApplication {
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
 		//获取监听器，这里是第二次加载spring.factories 文件
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		//找到main方法的类
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
 	
 	/**
-	 * 根据方法栈找到main方法 牛逼
+	 * 根据方法栈找到main方法的类 牛逼
+	 * 因为这个是方法栈  会记录从程序入口到执行到这里的所有方法名
 	 * @return
 	 */
 	private Class<?> deduceMainApplicationClass() {
@@ -310,6 +312,7 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		
 		//1.创建并启动计时监控类 初始化一个空白字符串的计时类
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
@@ -329,8 +332,11 @@ public class SpringApplication {
 
 		try {
 			
+			//参数封装,也就是在命令行下启动应用带的参数,例如--server.port=9000
+			//有一个内部Source类
 			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 			
+			//准备环境: 1.加载外部化配置资源到environment 2.触发ApplicationEnvironmentPrepareEvent事件
 			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			
 			configureIgnoreBeanInfo(environment);
@@ -377,7 +383,10 @@ public class SpringApplication {
 	private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
 			ApplicationArguments applicationArguments) {
 		// Create and configure the environment
+		//因为之前在SpringApplication的initialize方法中设置了webEnvironment参数为true
+		//所以返回的参数类型为StandardServletEnvironment
 		ConfigurableEnvironment environment = getOrCreateEnvironment();
+		
 		configureEnvironment(environment, applicationArguments.getSourceArgs());
 		ConfigurationPropertySources.attach(environment);
 		listeners.environmentPrepared(environment);
@@ -450,7 +459,16 @@ public class SpringApplication {
 		return new SpringApplicationRunListeners(logger,
 				getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
 	}
-
+	
+	/**
+	 * 获取springFactory实例
+	 *
+	 * load Factories流程
+	 *
+	 * @param type
+	 * @param <T>
+	 * @return
+	 */
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type) {
 		return getSpringFactoriesInstances(type, new Class<?>[] {});
 	}
@@ -458,8 +476,13 @@ public class SpringApplication {
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type, Class<?>[] parameterTypes, Object... args) {
 		ClassLoader classLoader = getClassLoader();
 		// Use names and ensure unique to protect against duplicates
+		//获取Factory的name
+		//其中loadFactory 是从META-INF/spring.factories中去拿我们自定义的工厂初始化器
+		//spring boot 为我们写了很多spring.factories 其中包括错误报告 还有系统初始化器
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+		//这里实例化类通过name(java refrenc)来实例化
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);
+		//@Order 越小 越靠前
 		AnnotationAwareOrderComparator.sort(instances);
 		return instances;
 	}
@@ -470,7 +493,8 @@ public class SpringApplication {
 		List<T> instances = new ArrayList<>(names.size());
 		for (String name : names) {
 			try {
-				//forName 是类加载器,可以根据完整的类名把类加载到内存中 (其中有两种方式,一种是forName 直接调用构造器初始化,一种是loadClass,使用的时候才加载构造器)
+				//forName 是类加载器,可以根据完整的类名把类加载到内存中
+				//(其中有两种方式,一种是forName 直接调用构造器初始化,一种是loadClass,使用的时候才加载构造器)
 				Class<?> instanceClass = ClassUtils.forName(name, classLoader);
 				Assert.isAssignable(type, instanceClass);
 				Constructor<?> constructor = instanceClass.getDeclaredConstructor(parameterTypes);
@@ -489,12 +513,12 @@ public class SpringApplication {
 			return this.environment;
 		}
 		switch (this.webApplicationType) {
-		case SERVLET:
-			return new StandardServletEnvironment();
-		case REACTIVE:
-			return new StandardReactiveWebEnvironment();
-		default:
-			return new StandardEnvironment();
+			case SERVLET:
+				return new StandardServletEnvironment();
+			case REACTIVE:
+				return new StandardReactiveWebEnvironment();
+			default:
+				return new StandardEnvironment();
 		}
 	}
 
