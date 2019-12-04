@@ -467,6 +467,7 @@ public class SpringApplication {
 		//获取Factory的name
 		//其中loadFactory 是从META-INF/spring.factories中去拿我们自定义的工厂初始化器
 		//spring boot 为我们写了很多spring.factories 其中包括错误报告 还有系统初始化器
+		//这里的type 是用来拿sping.factory里面所定义的类
 		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
 		//这里实例化类通过name(java 路径)来实例化
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes, classLoader, args, names);

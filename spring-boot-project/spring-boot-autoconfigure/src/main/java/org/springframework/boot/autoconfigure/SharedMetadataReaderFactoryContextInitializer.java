@@ -39,17 +39,17 @@ import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 
 /**
+ * {@link ConfigurableApplicationContext}
+ * {@link Ordered} 用于实例的排序和启动的顺序
  * {@link ApplicationContextInitializer} to create a shared
  * {@link CachingMetadataReaderFactory} between the
  * {@link ConfigurationClassPostProcessor} and Spring Boot.
  *
  * @author Phillip Webb
  */
-class SharedMetadataReaderFactoryContextInitializer
-		implements ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
+class SharedMetadataReaderFactoryContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
 
-	public static final String BEAN_NAME = "org.springframework.boot.autoconfigure."
-			+ "internalCachingMetadataReaderFactory";
+	public static final String BEAN_NAME = "org.springframework.boot.autoconfigure.internalCachingMetadataReaderFactory";
 
 	@Override
 	public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -66,8 +66,7 @@ class SharedMetadataReaderFactoryContextInitializer
 	 * {@link CachingMetadataReaderFactory} and configure the
 	 * {@link ConfigurationClassPostProcessor}.
 	 */
-	private static class CachingMetadataReaderFactoryPostProcessor
-			implements BeanDefinitionRegistryPostProcessor, PriorityOrdered {
+	private static class CachingMetadataReaderFactoryPostProcessor implements BeanDefinitionRegistryPostProcessor, PriorityOrdered {
 
 		@Override
 		public int getOrder() {
@@ -108,8 +107,7 @@ class SharedMetadataReaderFactoryContextInitializer
 	 * {@link FactoryBean} to create the shared {@link MetadataReaderFactory}.
 	 */
 	static class SharedMetadataReaderFactoryBean
-			implements FactoryBean<ConcurrentReferenceCachingMetadataReaderFactory>, BeanClassLoaderAware,
-			ApplicationListener<ContextRefreshedEvent> {
+			implements FactoryBean<ConcurrentReferenceCachingMetadataReaderFactory>, BeanClassLoaderAware, ApplicationListener<ContextRefreshedEvent> {
 
 		private ConcurrentReferenceCachingMetadataReaderFactory metadataReaderFactory;
 
